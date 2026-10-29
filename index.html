@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HackPulse AI — Hackathon Mentor & Event Concierge</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="navbar">
+    <div class="brand" onclick="switchView('landing')">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <span class="brand-name">HackPulse<span class="accent">.AI</span></span>
+        <span class="brand-tag">Hackathon Concierge & Mentor Router</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="nav-btn active" id="nav-landing" onclick="switchView('landing')">Explore Events</button>
+      <button class="nav-btn" id="nav-dashboard" onclick="switchView('dashboard')">
+        🔒 Live Mentor Queue <span class="badge" id="queue-badge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container">
+
+    <!-- ==================== VIEW 1: LANDING & LIVE EVENTS DIRECTORY ==================== -->
+    <section id="view-landing" class="view active">
+      <div class="hero">
+        <div class="pill-badge">Hackathon Participant & Mentor Assistant</div>
+        <h1>Get Instant Answers & Route Stuck Teams<br><span class="gradient-text">to the Right Mentor Instantly.</span></h1>
+        <p class="hero-sub">
+          Choose whether you want to host an event or join an active hackathon below to access your dedicated assistant and live mentor dispatch.
+        </p>
+        <div class="hero-cta">
+          <button class="btn btn-primary btn-lg" onclick="openHostModal()">🚀 Host an Event</button>
+          <button class="btn btn-secondary btn-lg" onclick="document.getElementById('live-events-section').scrollIntoView({behavior:'smooth'})">👥 Join an Event</button>
+        </div>
+      </div>
+
+      <!-- LIVE HOSTED EVENTS DIRECTORY -->
+      <div id="live-events-section" class="events-directory-section">
+        <div class="section-header">
+          <div>
+            <h2>🟢 Active Hackathons & Events</h2>
+            <p>Click <strong>"Join This Event"</strong> to enter the Concierge, or use password-protected <strong>Edit</strong> / <strong>Delete</strong> controls.</p>
+          </div>
+          <span class="pill-badge" id="active-events-count">0 Live Events</span>
+        </div>
+
+        <div id="landing-events-grid" class="events-grid"></div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: PARTICIPANT PORTAL ==================== -->
+    <section id="view-participant" class="view">
+      
+      <!-- Join Gate Screen -->
+      <div id="join-gate" class="join-card card">
+        <div class="join-header">
+          <span class="f-icon">🎟️</span>
+          <h2>Join Event & Access Concierge</h2>
+          <p>Select your hackathon and enter your team details so mentors know where to find you.</p>
+        </div>
+
+        <!-- Selected Event Preview Banner -->
+        <div id="selected-event-preview" class="selected-event-box"></div>
+
+        <form onsubmit="joinHackathon(event)">
+          <div class="form-group">
+            <label>Choose Active Hackathon / Event *</label>
+            <select id="join-event-select" onchange="onJoinEventSelectChange()" required></select>
+          </div>
+          <div class="form-group">
+            <label>Team Name *</label>
+            <input type="text" id="join-team" required placeholder="e.g., Team TechTycoons" />
+          </div>
+          <div class="form-group">
+            <label>Table / Bay Location *</label>
+            <input type="text" id="join-table" required placeholder="e.g., Bay A - Table 14" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Launch Event Assistant →</button>
+        </form>
+      </div>
+
+      <!-- Active Participant Workspace (Hidden until Joined) -->
+      <div id="participant-workspace" class="workspace-grid hidden">
+        
+        <!-- Left Sidebar: Event Overview & Flowchart -->
+        <aside class="event-sidebar card">
+          <div class="event-banner">
+            <img id="display-logo" src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="Logo" />
+            <div>
+              <span class="code-pill" id="display-code">SURGE26</span>
+              <h3 id="display-name">Hackathon Name</h3>
+            </div>
+          </div>
+
+          <div class="team-status-box">
+            <div>
+              <small>PARTICIPATING TEAM</small>
+              <strong id="display-team">Team Name</strong>
+              <span id="display-table" class="table-tag">Table 14</span>
+            </div>
+            <button class="btn-xs" onclick="leaveTeam()">Switch Event / Team</button>
+          </div>
+
+          <div class="info-block">
+            <h4>🕒 Timings & Venue</h4>
+            <p id="display-time-venue"></p>
+          </div>
+
+          <div class="info-block">
+            <h4>🍕 Refreshments</h4>
+            <p id="display-food"></p>
+          </div>
+
+          <div class="info-block">
+            <h4>🔄 Event Order Flowchart</h4>
+            <div id="display-flowchart" class="flowchart-container"></div>
+          </div>
+
+          <div class="info-block">
+            <h4>🎯 Quick Prompt Chips</h4>
+            <div class="chip-group">
+              <button class="chip" onclick="sendQuickPrompt('Explain all the Problem Statements for this event in detail.')">📋 Problem Statements</button>
+              <button class="chip" onclick="sendQuickPrompt('What are the hackathon rules and team size limits?')">⚖️ Rules & Limits</button>
+              <button class="chip" onclick="sendQuickPrompt('When is food served and what is the schedule flow?')">🍕 Food & Timings</button>
+              <button class="chip" onclick="sendQuickPrompt('We are stuck on a CORS and Firebase auth error in React. Help!')">🐛 Stuck on Code Bug</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Right Main Area: Chatbot + Escalation Bar -->
+        <div class="chat-wrapper card">
+          <div class="chat-header">
+            <div>
+              <h3 id="chat-bot-title">🤖 Event & Mentor Concierge</h3>
+              <p>Ask about this event's schedules, rules, problem statements, or paste a technical bug.</p>
+            </div>
+            <button class="btn btn-danger" onclick="openEscalationModal('Manual Escalation Request')">
+              🙋‍♂️ Not Satisfied? Summon Mentor / Host
+            </button>
+          </div>
+
+          <!-- Live Active Ticket Banner (Appears when escalated) -->
+          <div id="active-ticket-banner" class="ticket-banner hidden">
+            <div class="pulse-dot"></div>
+            <div class="ticket-banner-text">
+              <strong id="ticket-banner-title">Escalation Active:</strong>
+              <span id="ticket-banner-desc">Mentor assigned and heading to your table.</span>
+            </div>
+          </div>
+
+          <!-- Chat Messages Feed -->
+          <div id="chat-feed" class="chat-feed"></div>
+
+          <!-- Chat Input Box -->
+          <form class="chat-input-bar" onsubmit="handleChatSubmit(event)">
+            <input type="text" id="chat-input" placeholder="Ask about Problem Statements, rules, food timings, or paste your code error..." autocomplete="off" required />
+            <button type="submit" class="btn btn-primary" id="send-btn">Send ↵</button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: PASSWORD-PROTECTED HOST & MENTOR LIVE QUEUE ==================== -->
+    <section id="view-dashboard" class="view">
+
+      <!-- HOST AUTHENTICATION GATE (Shown when no event is unlocked) -->
+      <div id="host-auth-gate" class="join-card card">
+        <div class="join-header">
+          <span class="f-icon">🔐</span>
+          <h2>Host & Mentor Queue Login</h2>
+          <p>The Live Mentor Queue is restricted to Event Hosts & Mentors. Enter your Event Name (or Code) and Host Password to unlock.</p>
+        </div>
+
+        <form onsubmit="authenticateHostQueue(event)">
+          <div class="form-group">
+            <label>Select or Enter Event Name / Code *</label>
+            <input type="text" id="auth-event-input" list="hosted-events-datalist" required placeholder="e.g., Matrusri TechSurge 24H Hackathon or SURGE26" />
+            <datalist id="hosted-events-datalist"></datalist>
+          </div>
+          <div class="form-group">
+            <label>Host Password *</label>
+            <input type="password" id="auth-password-input" required placeholder="Enter event host password..." />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">🔓 Unlock Event Live Queue</button>
+        </form>
+      </div>
+
+      <!-- UNLOCKED HOST COMMAND CENTER (Hidden until authenticated) -->
+      <div id="host-dashboard-content" class="hidden">
+        <div class="section-header">
+          <div>
+            <span class="pill-badge" id="dash-event-code-pill">SURGE26</span>
+            <h2 id="dash-event-title">📡 Live Host & Mentor Command Center</h2>
+            <p>Showing real-time queries and escalations exclusively for this event. Synced directly with Google Sheets.</p>
+          </div>
+          <div class="dash-actions">
+            <button class="btn btn-outline" onclick="sendTestPingToSheet()">🧪 Create Test Query</button>
+            <a href="https://docs.google.com/spreadsheets/d/1vokak0CU3Ytbf3wKzwKFG1BEY2RGfNNmYoEZYDrU6Vk/edit?usp=sharing" target="_blank" class="btn btn-primary" style="text-decoration:none;">
+              📊 Open Query Sheet ↗
+            </a>
+            <button class="btn btn-danger" onclick="lockHostQueue()">🔒 Lock / Switch Event</button>
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Event Queries Logged</span>
+            <strong class="stat-val" id="stat-total">0</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Deflected by Assistant</span>
+            <strong class="stat-val text-green" id="stat-ai">0</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Active Escalations</span>
+            <strong class="stat-val text-amber" id="stat-escalated">0</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Google Sheets Sync</span>
+            <strong class="stat-val text-green" id="stat-sheet-status">Connected 🟢</strong>
+          </div>
+        </div>
+
+        <!-- Escalated Tickets Queue -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h3>🚨 Active Escalations (Teams Waiting for Mentor/Host at Their Table)</h3>
+          <div id="escalation-list" class="escalation-grid">
+            <p class="empty-state">No active escalations for this event right now.</p>
+          </div>
+        </div>
+
+        <!-- Full Google Sheets Mirror Table -->
+        <div class="card">
+          <h3>📊 Real-Time Event Query & Problem Log (Synced with Google Sheet)</h3>
+          <div class="table-responsive">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Event / Hackathon Name</th>
+                  <th>Team Name</th>
+                  <th>Table</th>
+                  <th>Problem / Query</th>
+                  <th>Category</th>
+                  <th>Assigned Mentor / Host</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="log-table-body">
+                <tr>
+                  <td colspan="8" class="empty-state">No queries asked in this event yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==================== MODAL 1: HOST / EDIT EVENT MODAL ==================== -->
+  <div id="host-modal" class="modal-overlay hidden">
+    <div class="modal-card card" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
+      <div class="section-header" style="margin-bottom: 1rem;">
+        <h3 id="host-modal-title">🚀 Host or Edit Event</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeHostModal()">✕ Close</button>
+      </div>
+
+      <form id="host-form" onsubmit="saveHostEvent(event)">
+        <input type="hidden" id="edit-mode-flag" value="false" />
+        <div class="form-group">
+          <label>Hackathon / Event Name *</label>
+          <input type="text" id="ev-name" required placeholder="e.g., InnovateX 24-Hour Hackathon" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Event Code (Unique ID) *</label>
+            <input type="text" id="ev-code" required placeholder="e.g., INNO26" />
+          </div>
+          <div class="form-group">
+            <label>🔒 Host Password *</label>
+            <input type="password" id="ev-password" required placeholder="Secret host password" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Logo URL (Optional)</label>
+          <input type="url" id="ev-logo" placeholder="https://..." />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date & Timings *</label>
+            <input type="text" id="ev-time" required placeholder="e.g., Nov 14, 9:00 AM - 11:00 PM" />
+          </div>
+          <div class="form-group">
+            <label>Venue & Hall Layout *</label>
+            <input type="text" id="ev-venue" required placeholder="e.g., Auditorium (Tables 1-50)" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Refreshments & Food Timings *</label>
+          <input type="text" id="ev-food" required placeholder="e.g., Lunch 1:00 PM | Snacks 5:00 PM" />
+        </div>
+        <div class="form-group">
+          <label>Rules & Limitations *</label>
+          <textarea id="ev-rules" rows="3" required placeholder="Team size limits, code commit rules..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Event Order Flow (Separate with <code>-&gt;</code>) *</label>
+          <input type="text" id="ev-flow" required placeholder="Check-in 9AM -> Coding 10AM -> Pitch 5PM" />
+        </div>
+        <div class="form-group">
+          <label>Problem Statements (One per line: <code>ID: Title - Desc</code>) *</label>
+          <textarea id="ev-problems" rows="3" required placeholder="PS1: AI Router - Build triage system..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Mentor Roster (One per line: <code>Name | Skills | Location</code>) *</label>
+          <textarea id="ev-mentors" rows="3" required placeholder="Sneha Rao | React, Node | Bay A"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeHostModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="host-submit-btn">Publish Event ⚡</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: PASSWORD VERIFICATION FOR EDIT/DELETE ==================== -->
+  <div id="auth-check-modal" class="modal-overlay hidden">
+    <div class="modal-card card">
+      <h3 id="auth-check-title">🔒 Enter Host Password</h3>
+      <p id="auth-check-desc">Enter the host password for this event to proceed.</p>
+      <form onsubmit="verifyHostAction(event)">
+        <input type="hidden" id="auth-target-code" />
+        <input type="hidden" id="auth-target-action" />
+        <div class="form-group">
+          <label>Host Password *</label>
+          <input type="password" id="auth-verify-pass" required placeholder="Enter password..." />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeAuthCheckModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="auth-verify-btn">Confirm</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: ESCALATE TO MENTOR ==================== -->
+  <div id="escalation-modal" class="modal-overlay hidden">
+    <div class="modal-card card">
+      <h3>🚨 Summon Host or Domain Mentor</h3>
+      <p>Not satisfied with the assistant? Our smart router will dispatch the mentor for <strong id="esc-event-display">this event</strong> to <strong id="esc-team-display">your table</strong> and log it in Google Sheets.</p>
+      
+      <form onsubmit="submitEscalation(event)">
+        <div class="form-group">
+          <label>What is the issue / problem you need help with? *</label>
+          <textarea id="esc-problem" rows="3" required placeholder="Describe your doubt or code bug..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Issue Type</label>
+          <select id="esc-category">
+            <option value="Technical / Code Bug">💻 Technical / Code Bug</option>
+            <option value="Problem Statement Clarification">📋 Problem Statement Doubt</option>
+            <option value="Event Logistics / Rules">🏟️ Event Logistics, Food, or Rules</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeEscalationModal()">Cancel</button>
+          <button type="submit" class="btn btn-danger">🚀 Dispatch Mentor & Log</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="toast hidden">Action completed!</div>
+
+  <!-- ==================== APPLICATION JAVASCRIPT ==================== -->
+  <script>
+    // Configured Apps Script Web App URLs
+    const STORAGE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXTdsyPvlB06YCd6WcL0YM2ieC1dyjUrtSsoOtqjOugXdj1dzEqQcmOY3lEIkUpeyGXg/exec";
+    const QUERY_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwbVeTwaRhMfteaADdocV9BXkJuNUfCkZKqCoIuJzivTiR5wYNkpf0PQmUCBQa1b_0gA/exec";
+
+    // Safe local storage helpers: corrupted or blocked storage must not stop the chatbot.
+    function readStoredJSON(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (error) {
+        console.warn(`Could not read ${key}; using defaults.`, error);
+        return fallback;
+      }
+    }
+    function saveStoredJSON(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); }
+      catch (error) { console.warn(`Could not save ${key}.`, error); }
+    }
+
+    let eventsList = readStoredJSON('hp_eventsList', []);
+    let currentTeam = readStoredJSON('hp_currentTeam', null);
+    let unlockedHostEventCode = (() => { try { return sessionStorage.getItem('hp_unlockedHostEventCode') || null; } catch (_) { return null; } })();
+    let queryLogs = readStoredJSON('hp_queryLogs', []);
+    let learnedFAQs = readStoredJSON('hp_learnedFAQs', []);
+    let lastUserQuestion = ""; 
+
+    // --- AUTOMATIC LIVE SYNC ON STARTUP ---
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Pull latest events and query logs straight from Google Sheets
+      await fetchEventsFromSheet();
+      await fetchQueryLogsFromSheet();
+
+      renderAllEventDirectories();
+      updateGlobalBadge();
+
+      if (currentTeam) {
+        renderParticipantWorkspace();
+      }
+      if (unlockedHostEventCode) {
+        renderDashboard();
+      }
+    });
+
+    async function fetchEventsFromSheet() {
+      if (!STORAGE_APPS_SCRIPT_URL) return;
+      try {
+        const res = await fetch(STORAGE_APPS_SCRIPT_URL);
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          eventsList = data;
+          saveStoredJSON('hp_eventsList', eventsList);
+        }
+      } catch (err) {
+        console.warn("Could not load events from sheet, using local cache:", err);
+      }
+    }
+
+    async function fetchQueryLogsFromSheet() {
+      if (!QUERY_APPS_SCRIPT_URL) return;
+      try {
+        const res = await fetch(QUERY_APPS_SCRIPT_URL);
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          queryLogs = data;
+          saveStoredJSON('hp_queryLogs', queryLogs);
+        }
+      } catch (err) {
+        console.warn("Could not load query logs from sheet, using local cache:", err);
+      }
+    }
+
+    function getEventByCodeOrName(identifier) {
+      if (!identifier) return null;
+      const clean = identifier.trim().toLowerCase();
+      return eventsList.find(ev =>
+        ev.code.toLowerCase() === clean ||
+        ev.name.toLowerCase() === clean
+      ) || null;
+    }
+
+    function switchView(viewName) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(`view-${viewName}`).classList.add('active');
+      const navBtn = document.getElementById(`nav-${viewName}`);
+      if (navBtn) navBtn.classList.add('active');
+
+      renderAllEventDirectories();
+
+      if (viewName === 'participant') {
+        if (currentTeam) {
+          renderParticipantWorkspace();
+        } else {
+          document.getElementById('join-gate').classList.remove('hidden');
+          document.getElementById('participant-workspace').classList.add('hidden');
+          onJoinEventSelectChange();
+        }
+      }
+
+      if (viewName === 'dashboard') {
+        renderDashboard();
+      }
+    }
+
+    // --- HOST MODAL (CREATE & EDIT) ---
+    function openHostModal(editEventCode = null) {
+      const modal = document.getElementById('host-modal');
+      const title = document.getElementById('host-modal-title');
+      const flag = document.getElementById('edit-mode-flag');
+      
+      document.getElementById('host-form').reset();
+      modal.classList.remove('hidden');
+
+      if (editEventCode) {
+        const ev = getEventByCodeOrName(editEventCode);
+        if (!ev) return;
+        title.textContent = `✏️ Edit Event: ${ev.name}`;
+        flag.value = "true";
+
+        document.getElementById('ev-name').value = ev.name;
+        document.getElementById('ev-code').value = ev.code;
+        document.getElementById('ev-code').readOnly = true;
+        document.getElementById('ev-password').value = ev.password;
+        document.getElementById('ev-logo').value = ev.logo;
+        document.getElementById('ev-time').value = ev.time;
+        document.getElementById('ev-venue').value = ev.venue;
+        document.getElementById('ev-food').value = ev.food;
+        document.getElementById('ev-rules').value = ev.rules;
+        document.getElementById('ev-flow').value = ev.flow;
+        document.getElementById('ev-problems').value = ev.problems;
+        document.getElementById('ev-mentors').value = ev.mentors;
+      } else {
+        title.textContent = "🚀 Host New Event";
+        flag.value = "false";
+        document.getElementById('ev-code').readOnly = false;
+        document.getElementById('ev-logo').value = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png";
+      }
+    }
+
+    function closeHostModal() {
+      document.getElementById('host-modal').classList.add('hidden');
+    }
+
+    async function saveHostEvent(e) {
+      e.preventDefault();
+      const code = document.getElementById('ev-code').value.trim().toUpperCase();
+      const name = document.getElementById('ev-name').value.trim();
+      const password = document.getElementById('ev-password').value.trim();
+
+      const eventObj = {
+        action: "save",
+        code,
+        name,
+        password,
+        logo: document.getElementById('ev-logo').value.trim() || "https://cdn-icons-png.flaticon.com/512/4712/4712035.png",
+        time: document.getElementById('ev-time').value.trim(),
+        venue: document.getElementById('ev-venue').value.trim(),
+        food: document.getElementById('ev-food').value.trim(),
+        rules: document.getElementById('ev-rules').value.trim(),
+        flow: document.getElementById('ev-flow').value.trim(),
+        problems: document.getElementById('ev-problems').value.trim(),
+        mentors: document.getElementById('ev-mentors').value.trim()
+      };
+
+      const existingIdx = eventsList.findIndex(item => item.code.toUpperCase() === code);
+      if (existingIdx >= 0) {
+        eventsList[existingIdx] = eventObj;
+      } else {
+        eventsList.unshift(eventObj);
+      }
+
+      saveStoredJSON('hp_eventsList', eventsList);
+      closeHostModal();
+      renderAllEventDirectories();
+      showToast(`🚀 Event "${name}" saved & synced to Google Sheets!`);
+
+      try {
+        await fetch(STORAGE_APPS_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(eventObj)
+        });
+      } catch (err) {
+        console.error("Storage Sheet sync error:", err);
+      }
+    }
+
+    // --- PASSWORD CHECK MODAL (FOR EDIT / DELETE) ---
+    function promptAuthCheck(eventCode, actionType) {
+      document.getElementById('auth-target-code').value = eventCode;
+      document.getElementById('auth-target-action').value = actionType;
+      document.getElementById('auth-verify-pass').value = '';
+      
+      const title = document.getElementById('auth-check-title');
+      const desc = document.getElementById('auth-check-desc');
+      const btn = document.getElementById('auth-verify-btn');
+
+      if (actionType === 'edit') {
+        title.textContent = `✏️ Enter Password to Edit (${eventCode})`;
+        desc.textContent = "Only organizers with the host password can edit event details.";
+        btn.textContent = "Verify & Edit";
+        btn.className = "btn btn-primary";
+      } else {
+        title.textContent = `🗑️ Enter Password to Delete (${eventCode})`;
+        desc.textContent = "Warning: This will permanently remove the event.";
+        btn.textContent = "Verify & Delete";
+        btn.className = "btn btn-danger";
+      }
+
+      document.getElementById('auth-check-modal').classList.remove('hidden');
+    }
+
+    function closeAuthCheckModal() {
+      document.getElementById('auth-check-modal').classList.add('hidden');
+    }
+
+    async function verifyHostAction(e) {
+      e.preventDefault();
+      const code = document.getElementById('auth-target-code').value;
+      const actionType = document.getElementById('auth-target-action').value;
+      const password = document.getElementById('auth-verify-pass').value.trim();
+
+      const ev = getEventByCodeOrName(code);
+      if (!ev || ev.password !== password) {
+        alert("Incorrect Host Password!");
+        return;
+      }
+
+      closeAuthCheckModal();
+
+      if (actionType === 'edit') {
+        openHostModal(code);
+      } else if (actionType === 'delete') {
+        if (confirm(`Are you sure you want to delete "${ev.name}"?`)) {
+          eventsList = eventsList.filter(item => item.code !== code);
+          saveStoredJSON('hp_eventsList', eventsList);
+          renderAllEventDirectories();
+          showToast(`🗑️ Event ${ev.name} deleted.`);
+
+          try {
+            await fetch(STORAGE_APPS_SCRIPT_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action: "delete", code, password })
+            });
+          } catch (err) {
+            console.error("Storage Sheet delete sync error:", err);
+          }
+        }
+      }
+    }
+
+    // --- RENDER EVENT DIRECTORIES ---
+    function renderAllEventDirectories() {
+      const countEl = document.getElementById('active-events-count');
+      if (countEl) countEl.textContent = `${eventsList.length} Live Event${eventsList.length === 1 ? '' : 's'} Hosting`;
+
+      const landingGrid = document.getElementById('landing-events-grid');
+      if (landingGrid) {
+        if (eventsList.length === 0) {
+          landingGrid.innerHTML = `
+            <div class="no-events-banner">
+              <span class="f-icon">📭</span>
+              <h3>No events available</h3>
+              <p>There are no active hackathons or events hosted right now. Click <strong>"Host an Event"</strong> above to launch your own!</p>
+            </div>
+          `;
+        } else {
+          landingGrid.innerHTML = eventsList.map(ev => {
+            const psCount = (ev.problems || "").split('\n').filter(Boolean).length;
+            const mentorCount = (ev.mentors || "").split('\n').filter(Boolean).length;
+            return `
+              <div class="event-dir-card card">
+                <div class="event-dir-top">
+                  <img src="${ev.logo}" alt="${ev.name}" />
+                  <div>
+                    <span class="code-pill">${ev.code}</span>
+                    <h3>${ev.name}</h3>
+                  </div>
+                </div>
+                <div class="event-dir-meta">
+                  <p><strong>🕒 Time:</strong> ${ev.time}</p>
+                  <p><strong>📍 Venue:</strong> ${ev.venue}</p>
+                  <p><strong>🎯 Tracks:</strong> ${psCount} Problem Statements • ${mentorCount} Mentors Ready</p>
+                </div>
+                <div class="event-dir-actions" style="margin-bottom:0.75rem;">
+                  <button class="btn btn-primary" onclick="directJoinEvent('${ev.code}')">👨‍💻 Join This Event →</button>
+                  <button class="btn btn-outline btn-sm" onclick="promptHostLoginForEvent('${ev.code}')">🔒 Host Queue</button>
+                </div>
+                <div class="event-dir-actions" style="border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                  <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="promptAuthCheck('${ev.code}', 'edit')">✏️ Edit Event</button>
+                  <button class="btn btn-danger btn-sm" style="flex:1;" onclick="promptAuthCheck('${ev.code}', 'delete')">🗑️ Delete</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      const selectEl = document.getElementById('join-event-select');
+      if (selectEl) {
+        const currentVal = selectEl.value;
+        if (eventsList.length === 0) {
+          selectEl.innerHTML = `<option value="">No events available</option>`;
+        } else {
+          selectEl.innerHTML = eventsList.map(ev =>
+            `<option value="${ev.code}">${ev.name} (Code: ${ev.code})</option>`
+          ).join('');
+          if (currentVal && eventsList.some(e => e.code === currentVal)) {
+            selectEl.value = currentVal;
+          }
+        }
+        onJoinEventSelectChange();
+      }
+
+      const dataList = document.getElementById('hosted-events-datalist');
+      if (dataList) {
+        dataList.innerHTML = eventsList.map(ev =>
+          `<option value="${ev.name}">Code: ${ev.code}</option>`
+        ).join('');
+      }
+    }
+
+    function onJoinEventSelectChange() {
+      const selectEl = document.getElementById('join-event-select');
+      const previewEl = document.getElementById('selected-event-preview');
+      if (!selectEl || !previewEl) return;
+
+      if (eventsList.length === 0) {
+        previewEl.innerHTML = `<strong>No events available</strong><small>Please host an event first.</small>`;
+        return;
+      }
+
+      const ev = getEventByCodeOrName(selectEl.value) || eventsList[0];
+      if (!ev) return;
+
+      previewEl.innerHTML = `
+        <img src="${ev.logo}" alt="${ev.name}" />
+        <div>
+          <span class="code-pill">${ev.code}</span>
+          <strong>${ev.name}</strong>
+          <small>${ev.time} • ${ev.venue}</small>
+        </div>
+      `;
+    }
+
+    function directJoinEvent(eventCode) {
+      if (currentTeam && currentTeam.eventCode !== eventCode) {
+        localStorage.removeItem('hp_currentTeam');
+        currentTeam = null;
+        document.getElementById('chat-feed').innerHTML = '';
+      }
+      switchView('participant');
+      const selectEl = document.getElementById('join-event-select');
+      if (selectEl) {
+        selectEl.value = eventCode;
+        onJoinEventSelectChange();
+      }
+      document.getElementById('join-team').focus();
+    }
+
+    function promptHostLoginForEvent(eventCode) {
+      const ev = getEventByCodeOrName(eventCode);
+      unlockedHostEventCode = null;
+      sessionStorage.removeItem('hp_unlockedHostEventCode');
+      switchView('dashboard');
+      if (ev) {
+        document.getElementById('auth-event-input').value = ev.name;
+        document.getElementById('auth-password-input').focus();
+      }
+    }
+
+    // --- PARTICIPANT JOIN & WORKSPACE ---
+    function joinHackathon(e) {
+      e.preventDefault();
+      const selectedCode = document.getElementById('join-event-select').value;
+      const targetEvent = getEventByCodeOrName(selectedCode);
+
+      if (!targetEvent) {
+        alert("Please select a valid active event!");
+        return;
+      }
+
+      currentTeam = {
+        teamName: document.getElementById('join-team').value.trim(),
+        table: document.getElementById('join-table').value.trim(),
+        eventCode: targetEvent.code,
+        eventName: targetEvent.name
+      };
+
+      saveStoredJSON('hp_currentTeam', currentTeam);
+      document.getElementById('chat-feed').innerHTML = '';
+      renderParticipantWorkspace();
+      showToast(`Joined ${targetEvent.name} as ${currentTeam.teamName}!`);
+    }
+
+    function leaveTeam() {
+      localStorage.removeItem('hp_currentTeam');
+      currentTeam = null;
+      document.getElementById('chat-feed').innerHTML = '';
+      document.getElementById('join-gate').classList.remove('hidden');
+      document.getElementById('participant-workspace').classList.add('hidden');
+      onJoinEventSelectChange();
+    }
+
+    function getActiveParticipantEvent() {
+      if (!currentTeam) return eventsList[0];
+      return getEventByCodeOrName(currentTeam.eventCode) || eventsList[0];
+    }
+
+    function renderParticipantWorkspace() {
+      const ev = getActiveParticipantEvent();
+      if (!currentTeam || !ev) return;
+
+      document.getElementById('join-gate').classList.add('hidden');
+      document.getElementById('participant-workspace').classList.remove('hidden');
+
+      document.getElementById('display-logo').src = ev.logo;
+      document.getElementById('display-code').textContent = ev.code;
+      document.getElementById('display-name').textContent = ev.name;
+      document.getElementById('display-team').textContent = currentTeam.teamName;
+      document.getElementById('display-table').textContent = currentTeam.table;
+      document.getElementById('display-time-venue').textContent = `${ev.time} @ ${ev.venue}`;
+      document.getElementById('display-food').textContent = ev.food;
+      document.getElementById('chat-bot-title').textContent = `🤖 ${ev.name} — Concierge`;
+
+      const flowContainer = document.getElementById('display-flowchart');
+      flowContainer.innerHTML = '';
+      const steps = (ev.flow || "").split('->').map(s => s.trim()).filter(Boolean);
+      steps.forEach((step, idx) => {
+        const node = document.createElement('div');
+        node.className = 'flow-node';
+        node.innerHTML = `<span class="flow-index">${idx + 1}</span> <span>${step}</span>`;
+        flowContainer.appendChild(node);
+      });
+
+      const feed = document.getElementById('chat-feed');
+      if (feed.children.length === 0) {
+        appendChatMessage('bot', `👋 Welcome **${currentTeam.teamName}** (at **${currentTeam.table}**)! Connected to **${ev.name}** (\`${ev.code}\`).\n\nAsk me anything about:\n• **Problem Statements**\n• **Timings, Venue, or Refreshments**\n• **Rules & Limitations**\n• Or **paste a technical problem / bug** for instant solutions!`);
+      }
+
+      updateActiveTicketBanner();
+    }
+
+    function sendQuickPrompt(text) {
+      document.getElementById('chat-input').value = text;
+      handleChatSubmit(new Event('submit'));
+    }
+
+    function handleChatSubmit(e) {
+      e.preventDefault();
+      const inputEl = document.getElementById('chat-input');
+      const question = inputEl.value.trim();
+      if (!question) return;
+
+      const ev = getActiveParticipantEvent();
+      if (!ev) {
+        alert("Please join an event first!");
+        return;
+      }
+
+      lastUserQuestion = question;
+      inputEl.value = '';
+      appendChatMessage('user', question);
+
+      const replyObj = generateAIResponse(question, ev);
+      appendChatMessage('bot', replyObj.answer, replyObj.confidence === 'low', question);
+
+      logQueryAndSync({
+        eventCode: ev.code,
+        eventName: ev.name,
+        teamName: currentTeam ? currentTeam.teamName : "Anonymous",
+        table: currentTeam ? currentTeam.table : "N/A",
+        problem: question,
+        category: replyObj.category,
+        assignedMentor: replyObj.confidence === 'low' ? replyObj.matchedMentor : "Resolved by Assistant",
+        status: replyObj.confidence === 'low' ? "NEEDS ESCALATION" : "AI RESOLVED"
+      });
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+    }
+
+    function appendChatMessage(sender, text, showEscalatePrompt = false, originalQuery = "") {
+      const feed = document.getElementById('chat-feed');
+      if (!feed) return;
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `chat-msg ${sender === 'user' ? 'msg-user' : 'msg-bot'}`;
+
+      const formatted = escapeHTML(text)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\n/g, '<br>');
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.innerHTML = formatted;
+
+      if (sender === 'bot') {
+        const footer = document.createElement('div');
+        footer.className = 'msg-footer';
+        const prompt = document.createElement('span');
+        prompt.textContent = 'Did this solve your issue?';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn-inline-escalate';
+        button.textContent = showEscalatePrompt
+          ? '🚨 Dispatch Mentor to Table Now'
+          : '👎 Not Satisfied? Contact Mentor/Host';
+        button.addEventListener('click', () => openEscalationModal(originalQuery || lastUserQuestion));
+        footer.append(prompt, button);
+        bubble.appendChild(footer);
+      }
+      msgDiv.appendChild(bubble);
+      feed.appendChild(msgDiv);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function findBestMentor(ev, queryText, categoryHint = "") {
+      if (!ev || !ev.mentors) return "Event Host (Main Desk)";
+      const lines = ev.mentors.split('\n').map(l => l.trim()).filter(Boolean);
+      const qLower = (queryText + " " + categoryHint).toLowerCase();
+
+      let bestMentor = (lines[0] || 'Event Host (Main Desk)').split('|')[0].trim();
+      let highestScore = 0;
+
+      lines.forEach(line => {
+        const parts = line.split('|').map(p => p.trim());
+        const name = parts[0] || "Mentor";
+        const skills = (parts[1] || "").toLowerCase();
+        const location = parts[2] || "";
+
+        let score = 0;
+        const skillTokens = skills.split(/[,/ ]+/).map(s => s.trim()).filter(s => s.length > 1);
+        skillTokens.forEach(token => {
+          if (qLower.includes(token)) score += 3;
+        });
+
+        if (score > highestScore) {
+          highestScore = score;
+          bestMentor = `${name} (${location})`;
+        }
+      });
+
+      return bestMentor;
+    }
+
+    function generateAIResponse(question, ev) {
+      const q = String(question || '').toLowerCase().trim();
+      const matchedMentor = findBestMentor(ev, question);
+      const teamName = currentTeam?.teamName || 'your team';
+      const table = currentTeam?.table || 'your table';
+
+      for (const item of learnedFAQs) {
+        if (item.eventCode === ev.code && item.keyword &&
+            q.includes(String(item.keyword).toLowerCase())) {
+          return {
+            answer: `✅ **Verified Host/Mentor Update (${ev.name}):**\n${item.answer}`,
+            confidence: 'high', category: 'Verified FAQ', matchedMentor
+          };
+        }
+      }
+
+      if (/^(hi|hello|hey|hii|good morning|good afternoon|good evening)\b/.test(q)) {
+        return { answer: `👋 Hello ${teamName}! I'm the ${ev.name} event assistant. Ask me about problem statements, rules, schedule, venue, food, or a coding issue.`, confidence: 'high', category: 'Greeting', matchedMentor };
+      }
+      if (/\b(thanks|thank you|thx|thank u)\b/.test(q)) {
+        return { answer: `You're welcome, ${teamName}! 😊 Ask another question whenever you need help.`, confidence: 'high', category: 'General', matchedMentor };
+      }
+      if (/\b(who are you|what can you do|help|options|what can i ask)\b/.test(q)) {
+        return { answer: `🤖 **I'm your ${ev.name} event assistant.** I can help with:\n• Problem statements and project tracks\n• Event rules and team limits\n• Schedule, venue, and event flow\n• Food and refreshment timings\n• Basic coding troubleshooting\n\nIf I can't resolve an issue, I can help route it to a mentor.`, confidence: 'high', category: 'Assistant Help', matchedMentor };
+      }
+      if (/problem statement|problem statements|\bps\s*\d+\b|project track|tracks available|project ideas|what should we build|what to build/.test(q)) {
+        return { answer: `📋 **Official Problem Statements for ${ev.name}:**\n\n${ev.problems || 'The host has not added problem statements yet.'}\n\nTell me which statement you selected if you need help understanding it.`, confidence: 'high', category: 'Problem Statements', matchedMentor };
+      }
+      if (/\b(rule|rules|limit|team size|team members|member limit|github|allowed|pre-built|guideline|submission|eligibility|disqualif)\b/.test(q)) {
+        return { answer: `⚖️ **Rules & Limitations (${ev.name}):**\n\n${ev.rules || 'The host has not added rules yet.'}`, confidence: 'high', category: 'Rules & Limits', matchedMentor };
+      }
+      if (/\b(food|lunch|dinner|snack|refreshment|eat|coffee|breakfast|water)\b/.test(q)) {
+        return { answer: `🍕 **Food & Refreshments (${ev.name}):**\n\n${ev.food || 'Food details have not been added by the host.'}\n\n📍 **Venue:** ${ev.venue || 'Not specified'}`, confidence: 'high', category: 'Food & Logistics', matchedMentor };
+      }
+      if (/\b(time|timing|schedule|flow|when|order|deadline|freeze|pitch|judg|venue|where|location|start|end)\b/.test(q)) {
+        return { answer: `🕒 **Schedule & Venue (${ev.name}):**\n\n• **Timings:** ${ev.time || 'Not specified'}\n• **Venue:** ${ev.venue || 'Not specified'}\n• **Event flow:** ${ev.flow || 'Not specified'}`, confidence: 'high', category: 'Schedule & Venue', matchedMentor };
+      }
+      if (/\b(mentor|organizer|host|contact|who can help|human help)\b/.test(q)) {
+        return { answer: `🎯 **Mentor contact:** ${matchedMentor}\n\nYour team is listed at **${table}**. Use **Summon Mentor / Host** to submit the issue to the event queue.`, confidence: 'high', category: 'Mentor Help', matchedMentor };
+      }
+      if (/\b(error|bug|cors|firebase|react|python|mysql|node|javascript|api|crash|stuck|fix|debug|exception|not working|failed|failure|install|npm|compile|code)\b/.test(q)) {
+        return { answer: `🛠️ **Basic troubleshooting for ${teamName}:**\n\n1. Read the exact error in your browser console or terminal.\n2. Check the file name, spelling, imports, and whether the required package is installed.\n3. For API/CORS errors, verify the request URL, server status, and allowed-origin settings.\n4. For Firebase errors, check the project configuration and authentication/rules settings.\n5. Restart the development server after configuration changes.\n\n**Next step:** Paste the exact error message and the relevant code, and I’ll help narrow it down.\n\n🎯 If you need hands-on help, the suggested mentor is **${matchedMentor}** at your event.`, confidence: 'low', category: 'Technical Bug', matchedMentor };
+      }
+      if (/\b(event name|which event|event code|my team|my table)\b/.test(q)) {
+        return { answer: `You're connected to **${ev.name}** (code: **${ev.code}**).\n\n**Team:** ${teamName}\n**Table / Bay:** ${table}`, confidence: 'high', category: 'Event Information', matchedMentor };
+      }
+
+      return {
+        answer: `I couldn't find that information in **${ev.name}**'s event details yet.\n\nYou can ask about **problem statements, rules, schedule, venue, food, or coding errors**. For anything else, I recommend **${matchedMentor}**. Use the mentor button below to request help at **${table}**.`,
+        confidence: 'low', category: 'Unanswered Query', matchedMentor
+      };
+    }
+
+    function openEscalationModal(prefillText = "") {
+      if (!currentTeam) {
+        alert("Please join an event with your Team Name first!");
+        return;
+      }
+      const ev = getActiveParticipantEvent();
+      document.getElementById('esc-event-display').textContent = ev.name;
+      document.getElementById('esc-team-display').textContent = `${currentTeam.teamName} (${currentTeam.table})`;
+      document.getElementById('esc-problem').value = prefillText || lastUserQuestion || "";
+      document.getElementById('escalation-modal').classList.remove('hidden');
+    }
+
+    function closeEscalationModal() {
+      document.getElementById('escalation-modal').classList.add('hidden');
+    }
+
+    function submitEscalation(e) {
+      e.preventDefault();
+      const ev = getActiveParticipantEvent();
+      const problem = document.getElementById('esc-problem').value.trim();
+      const category = document.getElementById('esc-category').value;
+      const matchedMentor = findBestMentor(ev, problem, category);
+
+      logQueryAndSync({
+        eventCode: ev.code,
+        eventName: ev.name,
+        teamName: currentTeam.teamName,
+        table: currentTeam.table,
+        problem: problem,
+        category: category,
+        assignedMentor: matchedMentor,
+        status: "ESCALATED"
+      });
+
+      closeEscalationModal();
+      appendChatMessage('bot', `🚨 **Escalation Dispatched for ${ev.name}!**\n• **Team:** ${currentTeam.teamName} (${currentTeam.table})\n• **Problem:** ${problem}\n• **Assigned To:** ${matchedMentor}\n• **Google Sheet log:** Synced ✅`);
+      updateActiveTicketBanner();
+      showToast(`🚨 Dispatched ${matchedMentor} & logged to Sheet!`);
+    }
+
+    function updateActiveTicketBanner() {
+      if (!currentTeam) return;
+      const banner = document.getElementById('active-ticket-banner');
+      const activeTicket = queryLogs.find(q =>
+        q.teamName === currentTeam.teamName &&
+        q.eventCode === currentTeam.eventCode &&
+        q.status === 'ESCALATED'
+      );
+      if (activeTicket) {
+        banner.classList.remove('hidden');
+        document.getElementById('ticket-banner-title').textContent = `Live Dispatch (${activeTicket.assignedMentor}):`;
+        document.getElementById('ticket-banner-desc').textContent = `Heading to ${activeTicket.table} for "${activeTicket.problem}"`;
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    // --- HOST QUEUE AUTHENTICATION & DASHBOARD ---
+    function authenticateHostQueue(e) {
+      e.preventDefault();
+      const eventInput = document.getElementById('auth-event-input').value.trim();
+      const passInput = document.getElementById('auth-password-input').value.trim();
+
+      const targetEvent = getEventByCodeOrName(eventInput);
+      if (!targetEvent) {
+        alert(`No event found matching "${eventInput}".`);
+        return;
+      }
+
+      if (targetEvent.password !== passInput) {
+        alert("Incorrect Host Password for this event!");
+        return;
+      }
+
+      unlockedHostEventCode = targetEvent.code;
+      sessionStorage.setItem('hp_unlockedHostEventCode', unlockedHostEventCode);
+      document.getElementById('auth-password-input').value = '';
+      renderDashboard();
+      showToast(`🔓 Unlocked Live Queue for ${targetEvent.name}!`);
+    }
+
+    function lockHostQueue() {
+      unlockedHostEventCode = null;
+      sessionStorage.removeItem('hp_unlockedHostEventCode');
+      renderDashboard();
+      showToast("🔒 Host Queue locked.");
+    }
+
+    async function logQueryAndSync(entry) {
+      const record = {
+        id: 'Q-' + Date.now(),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        eventCode: entry.eventCode || "SURGE26",
+        eventName: entry.eventName || "Hackathon",
+        teamName: entry.teamName || "Unknown Team",
+        table: entry.table || "N/A",
+        problem: entry.problem || "",
+        category: entry.category || "General",
+        assignedMentor: entry.assignedMentor || "Host",
+        status: entry.status || "LOGGED"
+      };
+
+      queryLogs.unshift(record);
+      saveStoredJSON('hp_queryLogs', queryLogs);
+      updateGlobalBadge();
+      if (unlockedHostEventCode) renderDashboard();
+
+      if (QUERY_APPS_SCRIPT_URL) {
+        try {
+          const params = new URLSearchParams({
+            timestamp: record.timestamp,
+            eventName: record.eventName,
+            event: record.eventName,
+            hackathonName: record.eventName,
+            eventCode: record.eventCode,
+            teamName: record.teamName,
+            team: record.teamName,
+            table: record.table,
+            problem: record.problem,
+            query: record.problem,
+            category: record.category,
+            assignedMentor: record.assignedMentor,
+            status: record.status
+          });
+
+          await fetch(`${QUERY_APPS_SCRIPT_URL}?${params.toString()}`, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(record)
+          });
+        } catch (err) {
+          console.error("Query Sheet sync error:", err);
+        }
+      }
+    }
+
+    function updateGlobalBadge() {
+      const totalEscalated = queryLogs.filter(q => q.status === 'ESCALATED').length;
+      document.getElementById('queue-badge').textContent = totalEscalated;
+    }
+
+    function sendTestPingToSheet() {
+      const ev = getEventByCodeOrName(unlockedHostEventCode) || eventsList[0];
+      if (!ev) {
+        alert("Please unlock an event first!");
+        return;
+      }
+      logQueryAndSync({
+        eventCode: ev.code,
+        eventName: ev.name,
+        teamName: "Team TechTycoons",
+        table: "Bay A - Table 07",
+        problem: "Stuck on Firebase Auth CORS issue in React",
+        category: "Technical / Code Bug",
+        assignedMentor: findBestMentor(ev, "React Firebase CORS"),
+        status: "ESCALATED"
+      });
+      showToast(`🧪 Test query created & synced to Problems Google Sheet!`);
+    }
+
+    function renderDashboard() {
+      updateGlobalBadge();
+      const authGate = document.getElementById('host-auth-gate');
+      const dashContent = document.getElementById('host-dashboard-content');
+
+      const unlockedEvent = getEventByCodeOrName(unlockedHostEventCode);
+
+      if (!unlockedEvent) {
+        authGate.classList.remove('hidden');
+        dashContent.classList.add('hidden');
+        return;
+      }
+
+      authGate.classList.add('hidden');
+      dashContent.classList.remove('hidden');
+
+      document.getElementById('dash-event-code-pill').textContent = `EVENT CODE: ${unlockedEvent.code}`;
+      document.getElementById('dash-event-title').textContent = `📡 ${unlockedEvent.name} — Live Queue`;
+
+      const eventLogs = queryLogs.filter(q =>
+        q.eventCode === unlockedEvent.code ||
+        q.eventName === unlockedEvent.name
+      );
+
+      const total = eventLogs.length;
+      const aiResolved = eventLogs.filter(q => q.status === 'AI RESOLVED').length;
+      const activeEscalations = eventLogs.filter(q => q.status === 'ESCALATED');
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-ai').textContent = aiResolved;
+      document.getElementById('stat-escalated').textContent = activeEscalations.length;
+
+      const escContainer = document.getElementById('escalation-list');
+      if (activeEscalations.length === 0) {
+        escContainer.innerHTML = `<p class="empty-state">No active escalations for <strong>${unlockedEvent.name}</strong> right now!</p>`;
+      } else {
+        escContainer.innerHTML = activeEscalations.map(item => `
+          <div class="esc-card">
+            <div class="esc-top">
+              <span class="table-tag">${item.table}</span>
+              <span class="time-tag">${item.timestamp}</span>
+            </div>
+            <h4>Team: ${item.teamName}</h4>
+            <p class="esc-prob">"${item.problem}"</p>
+            <div class="esc-meta">
+              <span><strong>Event:</strong> ${item.eventName}</span>
+              <span><strong>Category:</strong> ${item.category}</span>
+              <span><strong>Dispatched:</strong> ${item.assignedMentor}</span>
+            </div>
+            <div class="esc-resolve-box">
+              <input type="text" id="ans-${item.id}" placeholder="Optional: Type resolution to teach bot..." />
+              <button class="btn btn-primary btn-sm" onclick="resolveTicket('${item.id}')">✅ Solved</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const tbody = document.getElementById('log-table-body');
+      if (eventLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No queries logged for ${unlockedEvent.name} yet.</td></tr>`;
+      } else {
+        tbody.innerHTML = eventLogs.map(row => `
+          <tr>
+            <td>${row.timestamp}</td>
+            <td><span class="code-pill">${row.eventName}</span></td>
+            <td><strong>${row.teamName}</strong></td>
+            <td><span class="table-tag">${row.table}</span></td>
+            <td>${row.problem}</td>
+            <td>${row.category}</td>
+            <td>${row.assignedMentor}</td>
+            <td><span class="status-pill status-${row.status.replace(/\s+/g, '-').toLowerCase()}">${row.status}</span></td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function resolveTicket(id) {
+      const target = queryLogs.find(q => q.id === id);
+      if (!target) return;
+
+      const noteInput = document.getElementById(`ans-${id}`);
+      const mentorAnswer = noteInput ? noteInput.value.trim() : "";
+
+      target.status = "MENTOR RESOLVED";
+      if (mentorAnswer) {
+        const keyword = target.problem.split(' ').slice(0, 3).join(' ');
+        learnedFAQs.push({
+          eventCode: target.eventCode,
+          keyword,
+          answer: mentorAnswer
+        });
+        saveStoredJSON('hp_learnedFAQs', learnedFAQs);
+      }
+
+      saveStoredJSON('hp_queryLogs', queryLogs);
+      renderDashboard();
+      updateActiveTicketBanner();
+      showToast("✅ Ticket resolved! Answer saved to memory.");
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3200);
+    }
+  </script>
+</body>
+</html>

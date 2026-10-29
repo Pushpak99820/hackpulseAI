@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "helpupd",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
